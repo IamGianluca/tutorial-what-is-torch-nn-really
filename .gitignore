@@ -1,0 +1,5 @@
+# python virtual environment
+.python-version
+
+# DVC tracked files
+/data

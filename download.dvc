@@ -1,0 +1,10 @@
+cmd: python download.py
+deps:
+- md5: 770e133c54b1f0614fbda021a4782250
+  path: download.py
+md5: 9a3d27f62fc100714d14c16ae3d10e18
+outs:
+- cache: true
+  md5: edfffc159ea7e25804392b0a6555e7af.dir
+  metric: false
+  path: data
