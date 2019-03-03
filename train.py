@@ -35,7 +35,6 @@ bs = 64
 
 xb = x_train[0: bs]
 preds = model(xb)
-print(preds[1], preds.shape)
 
 def nll(input, target):
     return -input[range(target.shape[0]), target].mean()
@@ -43,10 +42,29 @@ def nll(input, target):
 loss_func = nll
 
 yb = y_train[0: bs]
-print(loss_func(preds, yb))
 
 def accuracy(out, yb):
     preds = torch.argmax(out, dim=1)
     return (preds == yb).float().mean()
 
-print(accuracy(preds, yb))
+lr = 0.5
+epochs = 2
+
+for epoch in range(epochs):
+    for i in range((n - 1) // bs + 1):
+        start_i = i * bs
+        end_i = start_i + bs
+        xb = x_train[start_i: end_i]
+        yb = y_train[start_i: end_i]
+        pred = model(xb)
+        loss = loss_func(pred, yb)
+
+        loss.backward()
+        with torch.no_grad():  # do not record grad updates
+            weights -= weights.grad * lr
+            bias -= bias.grad * lr
+            weights.grad.zero_()
+            bias.grad.zero_()
+
+print("loss: ", loss_func(model(xb), yb))
+print("accuracy: ", accuracy(model(xb), yb))
