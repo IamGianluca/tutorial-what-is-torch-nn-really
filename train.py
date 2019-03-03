@@ -36,3 +36,11 @@ bs = 64
 xb = x_train[0: bs]
 preds = model(xb)
 print(preds[1], preds.shape)
+
+def nll(input, target):
+    return -input[range(target.shape[0]), target].mean()
+
+loss_func = nll
+
+yb = y_train[0: bs]
+print(loss_func(preds, yb))
