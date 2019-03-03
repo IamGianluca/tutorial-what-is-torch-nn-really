@@ -8,6 +8,7 @@ import torch
 import torch.nn.functional as F
 from matplotlib import pyplot
 from torch import nn, optim
+from torch.utils.data import TensorDataset
 
 from constants import PATH, FILENAME
 
@@ -20,8 +21,9 @@ with gzip.open((PATH / FILENAME).as_posix(), "rb") as f:
 x_train, y_train, x_valid, y_valid = map(
     torch.tensor, (x_train, y_train, x_valid, y_valid)
 )
-n, c = x_train.shape
+train_ds = TensorDataset(x_train, y_train)
 
+n, c = x_train.shape
 bs = 64
 
 loss_func = F.cross_entropy
@@ -46,8 +48,7 @@ def get_model():
     model = MnistLogistic()
     return model, optim.SGD(model.parameters(), lr=lr)
 
-xb = x_train[0: bs]
-yb = y_train[0: bs]
+xb, yb = train_ds[0: bs]
 
 model, opt = get_model()
 print("loss: ", loss_func(model(xb), yb))
@@ -55,10 +56,7 @@ print("loss: ", loss_func(model(xb), yb))
 def fit():
     for epoch in range(epochs):
         for i in range((n - 1) // bs + 1):
-            start_i = i * bs
-            end_i = start_i + bs
-            xb = x_train[start_i: end_i]
-            yb = y_train[start_i: end_i]
+            xb, yb = train_ds[i*bs: i*bs+bs]
             pred = model(xb)
             loss = loss_func(pred, yb)
 
