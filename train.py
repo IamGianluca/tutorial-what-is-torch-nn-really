@@ -5,6 +5,7 @@ import gzip
 import numpy as np
 import matplotlib
 import torch
+import torch.nn.functional as F
 from matplotlib import pyplot
 from constants import PATH, FILENAME
 
@@ -23,23 +24,16 @@ weights = torch.randn(784, 10) / math.sqrt(784)
 weights.requires_grad_()  # we don't want the previos step included in the grad
 bias = torch.zeros(10, requires_grad=True)
 
-def log_softmax(x):
-    """Activation function."""
-    return x - x.exp().sum(-1).log().unsqueeze(-1)
-
 def model(xb):
     """Linear model."""
-    return log_softmax(xb @ weights + bias)
+    return xb @ weights + bias
 
 bs = 64
 
 xb = x_train[0: bs]
 preds = model(xb)
 
-def nll(input, target):
-    return -input[range(target.shape[0]), target].mean()
-
-loss_func = nll
+loss_func = F.cross_entropy
 
 yb = y_train[0: bs]
 
