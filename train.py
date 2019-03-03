@@ -1,3 +1,4 @@
+import math
 import pickle
 import gzip
 
@@ -17,6 +18,21 @@ x_train, y_train, x_valid, y_valid = map(
     torch.tensor, (x_train, y_train, x_valid, y_valid)
 )
 n, c = x_train.shape
-print(x_train, y_train)
-print(x_train.shape)
-print(y_train.min(), y_train.max())
+
+weights = torch.randn(784, 10) / math.sqrt(784)
+weights.requires_grad_()  # we don't want the previos step included in the grad
+bias = torch.zeros(10, requires_grad=True)
+
+def log_softmax(x):
+    """Activation function."""
+    return x - x.exp().sum(-1).log().unsqueeze(-1)
+
+def model(xb):
+    """Linear model."""
+    return log_softmax(xb @ weights + bias)
+
+bs = 64
+
+xb = x_train[0: bs]
+preds = model(xb)
+print(preds[1], preds.shape)
