@@ -44,3 +44,9 @@ loss_func = nll
 
 yb = y_train[0: bs]
 print(loss_func(preds, yb))
+
+def accuracy(out, yb):
+    preds = torch.argmax(out, dim=1)
+    return (preds == yb).float().mean()
+
+print(accuracy(preds, yb))
