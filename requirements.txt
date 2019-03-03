@@ -6,6 +6,7 @@ colorama==0.4.1
 configobj==5.0.6
 configparser==3.7.3
 contextlib2==0.5.5
+cycler==0.10.0
 decorator==4.3.2
 distro==1.4.0
 dvc==0.29.0
@@ -16,6 +17,8 @@ grandalf==0.6
 idna==2.8
 jedi==0.13.3
 jsonpath-rw==1.4.0
+kiwisolver==1.0.1
+matplotlib==3.0.3
 nanotime==0.5.2
 networkx==2.2
 numpy==1.16.2
@@ -26,6 +29,7 @@ ply==3.11
 pyasn1==0.4.5
 pyfiglet==0.8.post1
 pyparsing==2.3.1
+python-dateutil==2.8.0
 python-jsonrpc-server==0.1.2
 python-language-server==0.24.0
 PyYAML==3.13
