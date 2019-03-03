@@ -7,7 +7,7 @@ import matplotlib
 import torch
 import torch.nn.functional as F
 from matplotlib import pyplot
-from torch import nn
+from torch import nn, optim
 
 from constants import PATH, FILENAME
 
@@ -42,6 +42,16 @@ model = MnistLogistic()
 lr = 0.5
 epochs = 2
 
+def get_model():
+    model = MnistLogistic()
+    return model, optim.SGD(model.parameters(), lr=lr)
+
+xb = x_train[0: bs]
+yb = y_train[0: bs]
+
+model, opt = get_model()
+print("loss: ", loss_func(model(xb), yb))
+
 def fit():
     for epoch in range(epochs):
         for i in range((n - 1) // bs + 1):
@@ -53,15 +63,10 @@ def fit():
             loss = loss_func(pred, yb)
 
             loss.backward()
-            with torch.no_grad():  # do not record grad updates
-                for p in model.parameters():
-                    p -= p.grad * lr
-                model.zero_grad()
+            opt.step()
+            opt.zero_grad()
 
 fit()
-
-xb = x_train[0: bs]
-yb = y_train[0: bs]
 
 print("loss: ", loss_func(model(xb), yb))
 print("accuracy: ", accuracy(model(xb), yb))
