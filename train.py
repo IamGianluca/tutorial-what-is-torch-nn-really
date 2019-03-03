@@ -7,6 +7,8 @@ import matplotlib
 import torch
 import torch.nn.functional as F
 from matplotlib import pyplot
+from torch import nn
+
 from constants import PATH, FILENAME
 
 
@@ -20,45 +22,47 @@ x_train, y_train, x_valid, y_valid = map(
 )
 n, c = x_train.shape
 
-weights = torch.randn(784, 10) / math.sqrt(784)
-weights.requires_grad_()  # we don't want the previos step included in the grad
-bias = torch.zeros(10, requires_grad=True)
-
-def model(xb):
-    """Linear model."""
-    return xb @ weights + bias
-
 bs = 64
 
-xb = x_train[0: bs]
-preds = model(xb)
-
 loss_func = F.cross_entropy
-
-yb = y_train[0: bs]
 
 def accuracy(out, yb):
     preds = torch.argmax(out, dim=1)
     return (preds == yb).float().mean()
 
+class MnistLogistic(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.weights = nn.Parameter(torch.randn(784, 10) / math.sqrt(784))
+        self.bias = nn.Parameter(torch.zeros(10))
+
+    def forward(self, xb):
+        return xb @ self.weights + self.bias
+
+model = MnistLogistic()
 lr = 0.5
 epochs = 2
 
-for epoch in range(epochs):
-    for i in range((n - 1) // bs + 1):
-        start_i = i * bs
-        end_i = start_i + bs
-        xb = x_train[start_i: end_i]
-        yb = y_train[start_i: end_i]
-        pred = model(xb)
-        loss = loss_func(pred, yb)
+def fit():
+    for epoch in range(epochs):
+        for i in range((n - 1) // bs + 1):
+            start_i = i * bs
+            end_i = start_i + bs
+            xb = x_train[start_i: end_i]
+            yb = y_train[start_i: end_i]
+            pred = model(xb)
+            loss = loss_func(pred, yb)
 
-        loss.backward()
-        with torch.no_grad():  # do not record grad updates
-            weights -= weights.grad * lr
-            bias -= bias.grad * lr
-            weights.grad.zero_()
-            bias.grad.zero_()
+            loss.backward()
+            with torch.no_grad():  # do not record grad updates
+                for p in model.parameters():
+                    p -= p.grad * lr
+                model.zero_grad()
+
+fit()
+
+xb = x_train[0: bs]
+yb = y_train[0: bs]
 
 print("loss: ", loss_func(model(xb), yb))
 print("accuracy: ", accuracy(model(xb), yb))
