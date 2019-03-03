@@ -23,7 +23,13 @@ x_train, y_train, x_valid, y_valid = map(
 )
 bs = 64
 train_ds = TensorDataset(x_train, y_train)
-train_dl = DataLoader(train_ds, batch_size=bs)
+train_dl = DataLoader(train_ds, batch_size=bs, shuffle=True)
+
+# NOTE: we’ll use a batch size for the validation set that is twice as large
+# as that for the training set. This is because the validation set does not
+# need backpropagation and thus takes less memory
+valid_ds = TensorDataset(x_valid, y_valid)
+valid_dl = DataLoader(valid_ds, batch_size=bs * 2)
 
 loss_func = F.cross_entropy
 
@@ -48,9 +54,12 @@ def get_model():
     return model, optim.SGD(model.parameters(), lr=lr)
 
 model, opt = get_model()
+xb, yb = x_train[0: bs], y_train[0: bs]
+print("loss: ", loss_func(model(xb), yb))
 
 def fit():
     for epoch in range(epochs):
+        model.train()
         for xb, yb in train_dl:
             pred = model(xb)
             loss = loss_func(pred, yb)
@@ -59,8 +68,14 @@ def fit():
             opt.step()
             opt.zero_grad()
 
+        model.eval()
+        with torch.no_grad():
+            valid_loss = sum(loss_func(model(xb), yb) for xb, yb in valid_dl)
+
+        print(epoch, valid_loss / len(valid_dl))
+
 fit()
 
 xb, yb = x_train[0: bs], y_train[0: bs]
 print("loss: ", loss_func(model(xb), yb))
-print("accuracy: ", accuracy(model(xb), yb))
+# print("accuracy: ", accuracy(model(xb), yb))
