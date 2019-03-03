@@ -29,32 +29,28 @@ def accuracy(out, yb):
     preds = torch.argmax(out, dim=1)
     return (preds == yb).float().mean()
 
-class MnistLogistic(nn.Module):
-    def __init__(self):
+class Lambda(nn.Module):
+    def __init__(self, func):
         super().__init__()
-        self.lin = nn.Linear(784, 10)
+        self.func = func
 
-    def forward(self, xb):
-        return self.lin(xb)
+    def forward(self, x):
+        return self.func(x)
 
-class MnistCNN(nn.Module):
-    def __init__(self):
-        super().__init__()
-        self.conv1 = nn.Conv2d(1, 16, kernel_size=3, stride=2, padding=1)
-        self.conv2 = nn.Conv2d(16, 16, kernel_size=3, stride=2, padding=1)
-        self.conv3 = nn.Conv2d(16, 10, kernel_size=3, stride=2, padding=1)
+def preprocess(x):
+    return x.view(-1, 1, 28, 28)
 
-    def forward(self, xb):
-        xb = xb.view(-1, 1, 28, 28)
-        xb = F.relu(self.conv1(xb))
-        xb = F.relu(self.conv2(xb))
-        xb = F.relu(self.conv3(xb))
-        xb = F.avg_pool2d(xb, 4)
-        return xb.view(-1, xb.size(1))
-
-def get_model(model):
-    model = model()
-    return model, optim.SGD(model.parameters(), lr=lr, momentum=0.9)
+model = nn.Sequential(
+    Lambda(preprocess),
+    nn.Conv2d(1, 16, kernel_size=3, stride=2, padding=1),
+    nn.ReLU(),
+    nn.Conv2d(16, 16, kernel_size=3, stride=2, padding=1),
+    nn.ReLU(),
+    nn.Conv2d(16, 10, kernel_size=3, stride=2, padding=1),
+    nn.ReLU(),
+    nn.AvgPool2d(4),
+    Lambda(lambda x: x.view(x.size(0), -1)),
+)
 
 def get_data(train_ds, valid_ds, bs):
     return (
@@ -87,10 +83,11 @@ def fit(epochs, model, loss_func, opt, train_dl, valid_dl):
         print(epoch, val_loss)
 
 lr = 0.1
-epochs = 20
+epochs = 2
 bs = 64
 loss_func = F.cross_entropy
 
 train_dl, valid_dl = get_data(train_ds, valid_ds, bs)
-model, opt = get_model(MnistCNN)
+opt = optim.SGD(model.parameters(), lr=lr, momentum=0.9)
 fit(epochs, model, loss_func, opt, train_dl, valid_dl)
+
