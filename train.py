@@ -13,6 +13,10 @@ from torch.utils.data import TensorDataset, DataLoader
 from constants import PATH, FILENAME
 
 
+print("Do I have cuda installed?: ", torch.cuda.is_available())
+dev = torch.device(
+    "cuda") if torch.cuda.is_available() else torch.device("cpu")
+
 with gzip.open((PATH / FILENAME).as_posix(), "rb") as f:
     ((x_train, y_train), (x_valid, y_valid), _) = pickle.load(
         f, encoding="latin-1")
@@ -79,7 +83,7 @@ bs = 64
 loss_func = F.cross_entropy
 
 def preprocess(x, y):
-    return x.view(-1, 1, 28, 28), y
+    return x.view(-1, 1, 28, 28).to(dev), y.to(dev)
 
 class WrappedDataLoader:
     def __init__(self, dl, func):
@@ -102,6 +106,7 @@ def accuracy(out, yb):
 train_dl, valid_dl = get_data(train_ds, valid_ds, bs)
 train_dl = WrappedDataLoader(train_dl, preprocess)
 valid_dl = WrappedDataLoader(valid_dl, preprocess)
+model.to(dev)
 opt = optim.SGD(model.parameters(), lr=lr, momentum=0.9)
 fit(epochs, model, loss_func, opt, train_dl, valid_dl)
 
